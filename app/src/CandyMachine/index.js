@@ -23,6 +23,8 @@ const opts = {
 const CandyMachine = ({ walletAddress }) => {
   // Add state property inside your component like this
   const [candyMachine, setCandyMachine] = useState(null);
+  const [isMinting, setIsMinting] = useState(false);
+  const [isLoadingMints, setIsLoadingMints] = useState(false);
 
   const getCandyMachineCreator = async (candyMachine) => {
     const candyMachineID = new PublicKey(candyMachine);
@@ -90,6 +92,8 @@ const CandyMachine = ({ walletAddress }) => {
   };
 
   const mintToken = async () => {
+    setIsMinting(true);
+
     const mint = web3.Keypair.generate();
 
     const userTokenAccountAddress = (
@@ -296,7 +300,9 @@ const CandyMachine = ({ walletAddress }) => {
       ).txs.map(t => t.txid);
     } catch (e) {
       console.log(e);
+      setIsMinting(false);
     }
+    setIsMinting(false);
     return [];
   };
 
@@ -321,6 +327,9 @@ const CandyMachine = ({ walletAddress }) => {
 
   // Declare getCandyMachineState as an async method
 const getCandyMachineState = async () => {
+  // Set loading flag.
+  setIsLoadingMints(true);
+
   const provider = getProvider();
   
   // Get metadata about your deployed candy machine program
@@ -389,6 +398,9 @@ const getCandyMachineState = async () => {
     goLiveDateTimeString,
     presale,
   });
+
+  // Remove loading flag.
+  setIsLoadingMints(false);
 };
 
   return (
@@ -397,9 +409,10 @@ const getCandyMachineState = async () => {
       <div className="machine-container">
         <p>{`Drop Date: ${candyMachine.state.goLiveDateTimeString}`}</p>
         <p>{`Items Minted: ${candyMachine.state.itemsRedeemed} / ${candyMachine.state.itemsAvailable}`}</p>
-        <button className="cta-button mint-button" onClick={mintToken}>
+        <button className="cta-button mint-button" onClick={mintToken} disabled={isMinting}>
             Mint NFT
         </button>
+        {isLoadingMints && <p>LOADING MINTS...</p>}
       </div>
     )
   );
